@@ -1,0 +1,86 @@
+# Rejestr serwerów i usług IT — Student16 (PC16, 172.31.115.16)
+# Porty: 10161 Nginx | 10162 Adminer | 10163 aplikacja | 10164 PostgreSQL
+name: student16
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-rejestr}:${POSTGRES_PASSWORD:-rejestr}@db:5432/${POSTGRES_DB:-rejestr}
+  SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+  HOST_IP: ${HOST_IP:-172.31.115.16}
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rejestr}
+      POSTGRES_USER: ${POSTGRES_USER:-rejestr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rejestr}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks: [backend]
+    ports:
+      - "${PORT_DB:-10164}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    image: ${APP_IMAGE:-rejestr-serwerow:local}
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      SEED_DEMO: ${SEED_DEMO:-1}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend, frontend]
+    ports:
+      - "${PORT_APP:-10163}:8000"
+
+  checker:
+    build: .                      # ten sam obraz co app (z cache), inne polecenie
+    image: ${APP_IMAGE:-rejestr-serwerow:local}
+    restart: unless-stopped
+    command: ["python", "-m", "app.checker"]
+    environment:
+      <<: *app-env
+      SKIP_INIT_DB: "1"
+      CHECK_INTERVAL: ${CHECK_INTERVAL:-30}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [backend]
+    healthcheck:
+      disable: true
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [frontend]
+    ports:
+      - "${PORT_WEB:-10161}:80"
+
+  adminer:
+    image: adminer:4
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on: [db]
+    networks: [backend]
+    ports:
+      - "${PORT_ADMINER:-10162}:8080"
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  db-data:

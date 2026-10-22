@@ -1,0 +1,18 @@
+[project]
+name = "rejestr-serwerow"
+version = "1.0.0"
+description = "Rejestr serwerów i usług IT — projekt Student16"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E731"]

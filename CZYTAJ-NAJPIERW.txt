@@ -1,0 +1,21 @@
+REJESTR SERWERÓW I USŁUG IT — Student16
+=======================================
+
+Pliki "github", "gitignore", "dockerignore" i "env.example" mają celowo
+nazwy BEZ kropki, żeby były widoczne po rozpakowaniu.
+
+PIERWSZY KROK po rozpakowaniu — w terminalu (Ctrl+Alt+T):
+
+    cd ~/rejestr-serwerow
+    bash przygotuj.sh
+
+Skrypt:
+  - zmieni nazwy na właściwe: .github, .gitignore, .dockerignore, .env.example
+  - utworzy plik .env z ustawieniami
+  - utworzy repozytorium Git z pierwszym commitem
+
+Potem pliki z kropką znów będą ukryte (tak działa Linux) — to normalne.
+Podgląd: w terminalu  ls -la   ,  w menedżerze plików  Ctrl+H.
+
+Dalej: git remote add origin ... oraz git push -u origin main
+(instrukcja w README.md).
